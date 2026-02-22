@@ -1,3 +1,4 @@
+import os
 from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -17,24 +18,24 @@ def retrieve_answer(question: str, allowed_levels: list[int]) -> str:
     if not retrieved_docs:
         return (
             "I don't have enough information in the available documents to answer your question.\n"
-            "This could mean:\n"
-            "- The information is not in the documents you have access to\n"
-            "- The documents haven't been uploaded yet\n"
+            "- The information may not be in the uploaded documents\n"
             "- Try rephrasing your question"
         )
 
     retrieved_texts = '\n\n'.join(i.page_content for i in retrieved_docs)
 
     llm = HuggingFaceEndpoint(
-        repo_id='mistralai/Mistral-7B-Instruct-v0.2',
-        task='text-generation'
+        repo_id="mistralai/Mistral-7B-Instruct-v0.2",
+        task="text-generation",
+        huggingfacehub_api_token=os.getenv("HUGGINGFACEHUB_API_TOKEN"),
+        max_new_tokens=512,
+        temperature=0.1,
     )
     model = ChatHuggingFace(llm=llm)
 
     prompt = ChatPromptTemplate([
         ("system", """You are a helpful AI assistant for a company's internal documentation system.
-Answer questions based ONLY on the provided context from company documents.
-Be concise, accurate, and professional. If unsure, say so."""),
+Answer questions based ONLY on the provided context. Be concise and professional."""),
         ("human", "Context:\n{context}\n\nQuestion: {question}\n\nAnswer:")
     ])
 
