@@ -2,14 +2,11 @@ import os
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_chroma import Chroma
 
-# Lazy loaded - only initialized on first use, NOT at import time
 _vector_store = None
-
 
 def get_vector_store():
     global _vector_store
     if _vector_store is None:
-        # Uses HuggingFace API for embeddings - no local model, no torch, no GPU needed!
         embeddings = HuggingFaceEndpointEmbeddings(
             model="sentence-transformers/all-MiniLM-L6-v2",
             huggingfacehub_api_token=os.getenv("HUGGINGFACEHUB_API_TOKEN")
@@ -20,7 +17,6 @@ def get_vector_store():
             persist_directory='chroma_db'
         )
     return _vector_store
-
 
 def all_docs():
     results = get_vector_store().get(include=["documents", "metadatas"])
